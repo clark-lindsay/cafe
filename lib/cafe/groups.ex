@@ -3,6 +3,8 @@ defmodule Cafe.Groups do
   The Groups context.
   """
 
+  @topic "#{IO.inspect(__MODULE__)}"
+
   import Ecto.Query, warn: false
   alias Cafe.Repo
 
@@ -50,9 +52,22 @@ defmodule Cafe.Groups do
 
   """
   def create_group(attrs \\ %{}) do
-    %Group{}
-    |> Group.changeset(attrs)
-    |> Repo.insert()
+    with group <- Group.changeset(%Group{}, attrs),
+         {:ok, group} <- Repo.insert(group),
+         {:ok, group} <- publish_create_group({:ok, group}) do
+      {:ok, group}
+    end
+  end
+
+  defp publish_create_group({:ok, group}) do
+    :ok =
+      Phoenix.PubSub.broadcast(
+        Cafe.PubSub,
+        @topic,
+        {:create_group, group}
+      )
+
+    {:ok, group}
   end
 
   @doc """
@@ -101,4 +116,6 @@ defmodule Cafe.Groups do
   def change_group(%Group{} = group, attrs \\ %{}) do
     Group.changeset(group, attrs)
   end
+
+  def pubsub_topic(), do: @topic
 end

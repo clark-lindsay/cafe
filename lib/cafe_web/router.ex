@@ -23,6 +23,12 @@ defmodule CafeWeb.Router do
     get "/", PageController, :index
   end
 
+  scope "/", CafeWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live "/home", HomeLive
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", CafeWeb do
   #   pipe_through :api

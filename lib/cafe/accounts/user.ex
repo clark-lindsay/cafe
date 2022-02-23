@@ -4,6 +4,7 @@ defmodule Cafe.Accounts.User do
   import Ecto.Changeset
 
   alias Cafe.Groups.Group
+  alias Cafe.Teams.Team
 
   schema "users" do
     field :email, :string
@@ -11,6 +12,7 @@ defmodule Cafe.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
     many_to_many :groups, Group, join_through: "groups_users"
+    many_to_many :teams, Team, join_through: "teams_users"
 
     timestamps()
   end

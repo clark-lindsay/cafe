@@ -4,12 +4,14 @@ defmodule Cafe.Groups.Group do
   import Ecto.Changeset
 
   alias Cafe.Accounts.User
+  alias Cafe.Teams.Team
 
   schema "groups" do
     field :collab_link, :string
     field :focus, :string
     field :work_item_link, :string
     many_to_many :users, User, join_through: "groups_users"
+    many_to_many :teams, Team, join_through: "groups_teams"
 
     timestamps()
   end

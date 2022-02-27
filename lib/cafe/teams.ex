@@ -7,8 +7,9 @@ defmodule Cafe.Teams do
   alias Cafe.Repo
 
   alias Cafe.Accounts.User
+  alias Cafe.Groups.Group
   alias Cafe.Teams.Team
-  alias Cafe.Joins.TeamUser
+  alias Cafe.Joins.{GroupTeam, TeamUser}
 
   @doc """
   Returns the list of teams.
@@ -104,10 +105,26 @@ defmodule Cafe.Teams do
     Team.changeset(team, attrs)
   end
 
-
   def add_user(%Team{id: team_id}, %User{id: user_id}) do
     %TeamUser{}
     |> TeamUser.changeset(%{team_id: team_id, user_id: user_id})
     |> Repo.insert!()
+  end
+
+  def add_group(%Team{id: team_id}, %Group{id: group_id}) do
+    %GroupTeam{}
+    |> GroupTeam.changeset(%{group_id: group_id, team_id: team_id})
+    |> Repo.insert!()
+  end
+
+  def remove_group(%Team{id: team_id}, %Group{id: group_id}) do
+    import Ecto.Query
+
+    query =
+      from(g in GroupTeam,
+        where: g.group_id == ^group_id and g.team_id == ^team_id
+      )
+
+    Repo.delete_all(query)
   end
 end

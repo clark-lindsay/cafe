@@ -4,7 +4,7 @@ defmodule Cafe.TeamsTest do
   alias Cafe.Teams
   alias Cafe.Teams.Team
 
-  import Cafe.{AccountsFixtures, TeamsFixtures}
+  import Cafe.{AccountsFixtures, GroupsFixtures, TeamsFixtures}
 
   describe "teams" do
     @invalid_attrs %{description: nil, name: nil}
@@ -67,6 +67,38 @@ defmodule Cafe.TeamsTest do
       %Team{users: associated_users} = Repo.preload(team, :users)
 
       assert [user] == associated_users
+    end
+  end
+
+  describe "add_group/2" do
+    test "associates the group to the team" do
+      group = group_fixture()
+      team = team_fixture()
+
+      Teams.add_group(team, group)
+      %Team{groups: associated_groups} = Repo.preload(team, :groups)
+
+      assert [group] == associated_groups
+    end
+  end
+
+  describe "remove_group/2" do
+    test "removes the association between the group and the team" do
+      group = group_fixture()
+      team = team_fixture()
+
+      Teams.add_group(team, group)
+      Teams.add_group(team, group_fixture())
+      %Team{groups: associated_groups} = Repo.preload(team, :groups)
+
+      assert 2 == Enum.count(associated_groups)
+      assert Enum.member?(associated_groups, group)
+
+      {1, _} = Teams.remove_group(team, group)
+      %Team{groups: associated_groups} = Repo.preload(team, :groups)
+
+      assert 1 == Enum.count(associated_groups)
+      refute Enum.member?(associated_groups, group)
     end
   end
 end

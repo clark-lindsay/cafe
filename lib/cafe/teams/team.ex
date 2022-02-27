@@ -5,12 +5,13 @@ defmodule Cafe.Teams.Team do
 
   alias Cafe.Accounts.User
   alias Cafe.Groups.Group
+  alias Cafe.Joins.{GroupTeam, TeamUser}
 
   schema "teams" do
     field :description, :string
     field :name, :string
-    many_to_many :users, User, join_through: "teams_users"
-    many_to_many :groups, Group, join_through: "groups_teams"
+    many_to_many :groups, Group, join_through: GroupTeam, on_delete: :delete_all
+    many_to_many :users, User, join_through: TeamUser, on_delete: :delete_all
 
     timestamps()
   end

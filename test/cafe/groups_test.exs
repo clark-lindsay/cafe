@@ -1,13 +1,12 @@
 defmodule Cafe.GroupsTest do
-  use Cafe.DataCase
+  use Cafe.DataCase, async: true
 
   alias Cafe.Groups
+  alias Cafe.Groups.Group
+
+  import Cafe.{GroupsFixtures, AccountsFixtures}
 
   describe "groups" do
-    alias Cafe.Groups.Group
-
-    import Cafe.GroupsFixtures
-
     @invalid_attrs %{collab_link: nil, focus: nil, work_item_link: nil}
 
     test "list_groups/0 returns all groups" do
@@ -21,7 +20,11 @@ defmodule Cafe.GroupsTest do
     end
 
     test "create_group/1 with valid data creates a group" do
-      valid_attrs = %{collab_link: "some collab_link", focus: "some focus", work_item_link: "some work_item_link"}
+      valid_attrs = %{
+        collab_link: "some collab_link",
+        focus: "some focus",
+        work_item_link: "some work_item_link"
+      }
 
       assert {:ok, %Group{} = group} = Groups.create_group(valid_attrs)
       assert group.collab_link == "some collab_link"
@@ -35,7 +38,12 @@ defmodule Cafe.GroupsTest do
 
     test "update_group/2 with valid data updates the group" do
       group = group_fixture()
-      update_attrs = %{collab_link: "some updated collab_link", focus: "some updated focus", work_item_link: "some updated work_item_link"}
+
+      update_attrs = %{
+        collab_link: "some updated collab_link",
+        focus: "some updated focus",
+        work_item_link: "some updated work_item_link"
+      }
 
       assert {:ok, %Group{} = group} = Groups.update_group(group, update_attrs)
       assert group.collab_link == "some updated collab_link"
@@ -58,6 +66,18 @@ defmodule Cafe.GroupsTest do
     test "change_group/1 returns a group changeset" do
       group = group_fixture()
       assert %Ecto.Changeset{} = Groups.change_group(group)
+    end
+  end
+
+  describe "add_user/2" do
+    test "associates the user to the group" do
+      user = user_fixture()
+      group = group_fixture()
+
+      Groups.add_user(group, user)
+      %Group{users: associated_users} = Repo.preload(group, :users)
+
+      assert [user] == associated_users
     end
   end
 end

@@ -9,6 +9,8 @@ defmodule Cafe.Groups do
   alias Cafe.Repo
 
   alias Cafe.Groups.Group
+  alias Cafe.Accounts.User
+  alias Cafe.Joins.GroupUser
 
   @doc """
   Returns the list of groups.
@@ -118,4 +120,19 @@ defmodule Cafe.Groups do
   end
 
   def pubsub_topic(), do: @topic
+
+  @doc """
+  Associates a `Cafe.AccountsUser` to the `Group` using the
+  `Cafe.JoinsGroupUser` schema
+
+  ## Examples
+
+      iex> add_user(group, user)
+      %Cafe.Joins.GroupUser{}
+  """
+  def add_user(%Group{id: group_id}, %User{id: user_id}) do
+    %GroupUser{}
+    |> GroupUser.changeset(%{group_id: group_id, user_id: user_id})
+    |> Repo.insert!()
+  end
 end

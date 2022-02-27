@@ -70,6 +70,26 @@ defmodule Cafe.TeamsTest do
     end
   end
 
+  describe "remove_user/2" do
+    test "removes the association between the user and the team" do
+      user = user_fixture()
+      team = team_fixture()
+
+      Teams.add_user(team, user)
+      Teams.add_user(team, user_fixture())
+      %Team{users: associated_users} = Repo.preload(team, :users)
+
+      assert 2 == Enum.count(associated_users)
+      assert Enum.member?(associated_users, user)
+
+      {1, _} = Teams.remove_user(team, user)
+      %Team{users: associated_users} = Repo.preload(team, :users)
+
+      assert 1 == Enum.count(associated_users)
+      refute Enum.member?(associated_users, user)
+    end
+  end
+
   describe "add_group/2" do
     test "associates the group to the team" do
       group = group_fixture()

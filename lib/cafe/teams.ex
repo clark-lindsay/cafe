@@ -111,6 +111,14 @@ defmodule Cafe.Teams do
     |> Repo.insert!()
   end
 
+  def remove_user(%Team{id: team_id}, %User{id: user_id}) do
+    import Ecto.Query
+    to_be_removed = from(t in TeamUser,
+    where: t.team_id == ^team_id and t.user_id == ^user_id)
+
+    Repo.delete_all(to_be_removed)
+  end
+
   def add_group(%Team{id: team_id}, %Group{id: group_id}) do
     %GroupTeam{}
     |> GroupTeam.changeset(%{group_id: group_id, team_id: team_id})

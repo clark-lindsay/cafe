@@ -2,12 +2,11 @@ defmodule Cafe.TeamsTest do
   use Cafe.DataCase
 
   alias Cafe.Teams
+  alias Cafe.Teams.Team
+
+  import Cafe.{AccountsFixtures, TeamsFixtures}
 
   describe "teams" do
-    alias Cafe.Teams.Team
-
-    import Cafe.TeamsFixtures
-
     @invalid_attrs %{description: nil, name: nil}
 
     test "list_teams/0 returns all teams" do
@@ -56,6 +55,18 @@ defmodule Cafe.TeamsTest do
     test "change_team/1 returns a team changeset" do
       team = team_fixture()
       assert %Ecto.Changeset{} = Teams.change_team(team)
+    end
+  end
+
+  describe "add_user/2" do
+    test "associates the user to the team" do
+      user = user_fixture()
+      team = team_fixture()
+
+      Teams.add_user(team, user)
+      %Team{users: associated_users} = Repo.preload(team, :users)
+
+      assert [user] == associated_users
     end
   end
 end

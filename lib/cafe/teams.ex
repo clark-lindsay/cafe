@@ -6,7 +6,9 @@ defmodule Cafe.Teams do
   import Ecto.Query, warn: false
   alias Cafe.Repo
 
+  alias Cafe.Accounts.User
   alias Cafe.Teams.Team
+  alias Cafe.Joins.TeamUser
 
   @doc """
   Returns the list of teams.
@@ -100,5 +102,12 @@ defmodule Cafe.Teams do
   """
   def change_team(%Team{} = team, attrs \\ %{}) do
     Team.changeset(team, attrs)
+  end
+
+
+  def add_user(%Team{id: team_id}, %User{id: user_id}) do
+    %TeamUser{}
+    |> TeamUser.changeset(%{team_id: team_id, user_id: user_id})
+    |> Repo.insert!()
   end
 end

@@ -120,11 +120,11 @@ defmodule Cafe.Teams do
   def remove_group(%Team{id: team_id}, %Group{id: group_id}) do
     import Ecto.Query
 
-    query =
+    to_be_removed =
       from(g in GroupTeam,
         where: g.group_id == ^group_id and g.team_id == ^team_id
       )
 
-    Repo.delete_all(query)
+    Repo.delete_all(to_be_removed)
   end
 end

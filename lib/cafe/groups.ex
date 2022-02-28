@@ -131,8 +131,16 @@ defmodule Cafe.Groups do
       %Cafe.Joins.GroupUser{}
   """
   def add_user(%Group{id: group_id}, %User{id: user_id}) do
-    %GroupUser{}
-    |> GroupUser.changeset(%{group_id: group_id, user_id: user_id})
-    |> Repo.insert!()
+    import Ecto.Query, only: [from: 2]
+
+    case Repo.all(from(g in GroupUser, where: g.group_id == ^group_id and g.user_id == ^user_id)) do
+      [%GroupUser{} = group_user | _] ->
+        {:ok, group_user}
+
+      _ ->
+        %GroupUser{}
+        |> GroupUser.changeset(%{group_id: group_id, user_id: user_id})
+        |> Repo.insert()
+    end
   end
 end

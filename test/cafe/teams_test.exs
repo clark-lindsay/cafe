@@ -3,6 +3,7 @@ defmodule Cafe.TeamsTest do
 
   alias Cafe.Teams
   alias Cafe.Teams.Team
+  alias Cafe.Joins.{GroupTeam, TeamUser}
 
   import Cafe.{AccountsFixtures, GroupsFixtures, TeamsFixtures}
 
@@ -68,6 +69,20 @@ defmodule Cafe.TeamsTest do
 
       assert [user] == associated_users
     end
+
+    test "trying to add the same user again does not add a new record" do
+      user = user_fixture()
+      team = team_fixture()
+
+      {:ok, _} = Teams.add_user(team, user)
+      %Team{users: associated_users} = Repo.preload(team, :users)
+
+      assert [user] == associated_users
+      assert 1 == Repo.all(TeamUser) |> Enum.count()
+
+      {:ok, _} = Teams.add_user(team, user)
+      assert 1 == Repo.all(TeamUser) |> Enum.count()
+    end
   end
 
   describe "remove_user/2" do
@@ -99,6 +114,20 @@ defmodule Cafe.TeamsTest do
       %Team{groups: associated_groups} = Repo.preload(team, :groups)
 
       assert [group] == associated_groups
+    end
+
+    test "trying to add the same group again does not add a new record" do
+      group = group_fixture()
+      team = team_fixture()
+
+      {:ok, _} = Teams.add_group(team, group)
+      %Team{groups: associated_groups} = Repo.preload(team, :groups)
+
+      assert [group] == associated_groups
+      assert 1 == Repo.all(GroupTeam) |> Enum.count()
+
+      {:ok, _} = Teams.add_group(team, group)
+      assert 1 == Repo.all(GroupTeam) |> Enum.count()
     end
   end
 

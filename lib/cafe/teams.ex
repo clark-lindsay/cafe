@@ -106,23 +106,50 @@ defmodule Cafe.Teams do
   end
 
   def add_user(%Team{id: team_id}, %User{id: user_id}) do
-    %TeamUser{}
-    |> TeamUser.changeset(%{team_id: team_id, user_id: user_id})
-    |> Repo.insert!()
+    import Ecto.Query, only: [from: 2]
+
+    case Repo.all(
+           from t in TeamUser,
+             where: t.team_id == ^team_id and t.user_id == ^user_id
+         ) do
+      [%TeamUser{} = team_user | _] ->
+        {:ok, team_user}
+
+      _ ->
+        %TeamUser{}
+        |> TeamUser.changeset(%{team_id: team_id, user_id: user_id})
+        |> Repo.insert()
+    end
   end
 
   def remove_user(%Team{id: team_id}, %User{id: user_id}) do
     import Ecto.Query
-    to_be_removed = from(t in TeamUser,
-    where: t.team_id == ^team_id and t.user_id == ^user_id)
+
+    to_be_removed =
+      from(t in TeamUser,
+        where: t.team_id == ^team_id and t.user_id == ^user_id
+      )
 
     Repo.delete_all(to_be_removed)
   end
 
   def add_group(%Team{id: team_id}, %Group{id: group_id}) do
-    %GroupTeam{}
-    |> GroupTeam.changeset(%{group_id: group_id, team_id: team_id})
-    |> Repo.insert!()
+    import Ecto.Query, only: [from: 2]
+
+    same_assocation =
+      from(g in GroupTeam,
+        where: g.group_id == ^group_id and g.team_id == ^team_id
+      )
+
+    case Repo.all(same_assocation) do
+      [%GroupTeam{} = group_team | _] ->
+        {:ok, group_team}
+
+      _ ->
+        %GroupTeam{}
+        |> GroupTeam.changeset(%{group_id: group_id, team_id: team_id})
+        |> Repo.insert()
+    end
   end
 
   def remove_group(%Team{id: team_id}, %Group{id: group_id}) do

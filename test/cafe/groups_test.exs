@@ -3,6 +3,7 @@ defmodule Cafe.GroupsTest do
 
   alias Cafe.Groups
   alias Cafe.Groups.Group
+  alias Cafe.Joins.GroupUser
 
   import Cafe.{GroupsFixtures, AccountsFixtures}
 
@@ -78,6 +79,20 @@ defmodule Cafe.GroupsTest do
       %Group{users: associated_users} = Repo.preload(group, :users)
 
       assert [user] == associated_users
+    end
+
+    test "trying to add the same user again does not add a new record" do
+      user = user_fixture()
+      group = group_fixture()
+
+      {:ok, _} = Groups.add_user(group, user)
+      %Group{users: associated_users} = Repo.preload(group, :users)
+
+      assert [user] == associated_users
+      assert 1 == Repo.all(GroupUser) |> Enum.count()
+
+      {:ok, _} = Groups.add_user(group, user)
+      assert 1 == Repo.all(GroupUser) |> Enum.count()
     end
   end
 end

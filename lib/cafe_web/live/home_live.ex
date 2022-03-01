@@ -9,7 +9,7 @@ defmodule CafeWeb.HomeLive do
 
     current_user = Accounts.get_user_by_session_token(session["user_token"])
     time_at_mount = DateTime.utc_now()
-    groups = Groups.list_groups() |> Enum.reverse()
+    groups = Groups.list_groups(preloads: [:users]) |> Enum.reverse()
     group_changeset = Groups.change_group(%Group{})
 
     {:ok,
@@ -78,14 +78,21 @@ defmodule CafeWeb.HomeLive do
   end
 
   def group(assigns) do
-    %Group{focus: focus, collab_link: collab_link, work_item_link: work_item_link} = assigns.term
+    %Group{focus: focus, collab_link: collab_link, work_item_link: work_item_link, users: users} = assigns.term
 
     ~H"""
     <div id={"#{@id}"} class="border-2 border-stone-500 rounded-md p-2">
       <h1 class="text-xl text-amber-700">Group header</h1>
       <h2 class="text-lg text-red-400"><%= focus %></h2>
       <div>Collaborating At: <a href={collab_link} class="text-blue-500"><%= collab_link %></a></div> 
-    <div>Work Item: <a href={work_item_link} class="text-blue-500"><%= work_item_link %></a></div> 
+      <div>Work Item: <a href={work_item_link} class="text-blue-500"><%= work_item_link %></a></div> 
+
+      <div>
+        <h3>Users</h3>
+        <%= for user <- users do %>
+          <p><%= user.email %></p>
+        <% end %>
+      </div>
     </div>
     """
   end

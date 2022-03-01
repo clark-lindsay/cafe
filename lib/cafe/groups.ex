@@ -21,8 +21,10 @@ defmodule Cafe.Groups do
       [%Group{}, ...]
 
   """
-  def list_groups do
-    Repo.all(Group)
+  def list_groups(args \\ %{}) do
+    preloads = args[:preloads] || []
+
+    Repo.all(from g in Group, preload: ^preloads, select: g)
   end
 
   @doc """
@@ -55,13 +57,13 @@ defmodule Cafe.Groups do
   """
   def create_group(attrs \\ %{}) do
     with group <- Group.changeset(%Group{}, attrs),
-         {:ok, group} <- Repo.insert(group),
-         {:ok, group} <- publish_create_group({:ok, group}) do
-      {:ok, group}
+         {:ok, inserted_group} <- Repo.insert(group),
+         {:ok, _group} <- publish_create_group({:ok, inserted_group}) do
+      {:ok, inserted_group}
     end
   end
 
-  defp publish_create_group({:ok, group}) do
+  defp publish_create_group(group) do
     :ok =
       Phoenix.PubSub.broadcast(
         Cafe.PubSub,

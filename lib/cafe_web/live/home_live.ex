@@ -1,7 +1,7 @@
 defmodule CafeWeb.HomeLive do
   use CafeWeb, :live_view
 
-  alias Cafe.{Accounts, Groups}
+  alias Cafe.{Accounts, Groups, Repo}
   alias Cafe.Groups.Group
 
   def mount(_params, session, socket) do
@@ -16,6 +16,7 @@ defmodule CafeWeb.HomeLive do
      assign(socket,
        time_at_mount: time_at_mount,
        current_user_email: current_user.email,
+       current_user_id: current_user.id,
        groups: groups,
        group_changeset: group_changeset
      ), temporary_assigns: [groups: []]}
@@ -38,7 +39,7 @@ defmodule CafeWeb.HomeLive do
       </.form>
       <div id="groups" phx-update="prepend" class="grid grid-cols-2 gap-4 m-4">
         <%= for group <- @groups do %>
-          <.group term={group} id={group.id} />
+          <.group term={group} id={group.id} current_user_id={@current_user_id} />
         <% end %>
       </div>
     </div>
@@ -63,7 +64,16 @@ defmodule CafeWeb.HomeLive do
     {:noreply, socket}
   end
 
-  def handle_info({:create_group, group}, socket) do
+  def handle_event("user_join_group", %{"userid" => user_id, "groupid" => group_id}, socket) do
+    Groups.add_user(group_id, user_id)
+    group = Groups.get_group!(group_id) |> Repo.preload(:users)
+
+    socket = assign(socket, :groups, [group])
+    {:noreply, socket}
+  end
+
+  def handle_info({:create_group, {:ok, group}}, socket) do
+    group = Repo.preload(group, :users)
     socket = assign(socket, :groups, [group])
 
     {:noreply, socket}
@@ -78,7 +88,10 @@ defmodule CafeWeb.HomeLive do
   end
 
   def group(assigns) do
-    %Group{focus: focus, collab_link: collab_link, work_item_link: work_item_link, users: users} = assigns.term
+    %Group{focus: focus, collab_link: collab_link, work_item_link: work_item_link, users: users} =
+      assigns.term
+
+    current_user_id = assigns.current_user_id
 
     ~H"""
     <div id={"#{@id}"} class="border-2 border-stone-500 rounded-md p-2">
@@ -93,6 +106,7 @@ defmodule CafeWeb.HomeLive do
           <p><%= user.email %></p>
         <% end %>
       </div>
+    <button class="text-md bg-amber-700" phx-click="user_join_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Join Group</button>
     </div>
     """
   end

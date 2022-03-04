@@ -10,7 +10,8 @@ defmodule Cafe.Groups do
 
   alias Cafe.Groups.Group
   alias Cafe.Accounts.User
-  alias Cafe.Joins.GroupUser
+  alias Cafe.Joins.GroupUsers
+  alias Cafe.Joins.GroupUsers.GroupUser
 
   @doc """
   Returns the list of groups.
@@ -58,7 +59,7 @@ defmodule Cafe.Groups do
   def create_group(attrs \\ %{}) do
     with group <- Group.changeset(%Group{}, attrs),
          {:ok, inserted_group} <- Repo.insert(group),
-         {:ok, _group} <- publish_create_group({:ok, inserted_group}) do
+         {:ok, _group} <- publish_create_group(inserted_group) do
       {:ok, inserted_group}
     end
   end
@@ -125,28 +126,33 @@ defmodule Cafe.Groups do
 
   @doc """
   Associates a `Cafe.AccountsUser` to the `Group` using the
-  `Cafe.JoinsGroupUser` schema
+  `Cafe.Joins.GroupUsers.GroupUser` schema
 
   ## Examples
 
       iex> add_user(group, user)
-      %Cafe.Joins.GroupUser{}
+      %Cafe.Joins.GroupUsers.GroupUser{}
   """
   def add_user(%Group{id: group_id}, %User{id: user_id}) do
     add_user(group_id, user_id)
   end
 
   def add_user(group_id, user_id) do
+    GroupUsers.create_group_user(group_id, user_id)
+  end
+
+  def remove_user(group_id, user_id) do
+    GroupUsers.remove_group_user(group_id, user_id)
+  end
+
+  def member?(group_id, user_id) do
     import Ecto.Query, only: [from: 2]
 
-    case Repo.all(from(g in GroupUser, where: g.group_id == ^group_id and g.user_id == ^user_id)) do
-      [%GroupUser{} = group_user | _] ->
-        {:ok, group_user}
-
-      _ ->
-        %GroupUser{}
-        |> GroupUser.changeset(%{group_id: group_id, user_id: user_id})
-        |> Repo.insert()
-    end
+    Repo.aggregate(
+      from(g in GroupUser,
+        where: g.group_id == ^group_id and g.user_id == ^user_id
+      ),
+      :count
+    ) > 0
   end
 end

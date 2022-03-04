@@ -2,20 +2,22 @@ defmodule CafeWeb.HomeLive do
   use CafeWeb, :live_view
 
   alias Cafe.{Accounts, Groups, Repo}
+  alias Cafe.Joins.GroupUsers
+  alias Cafe.Joins.GroupUsers.GroupUser
   alias Cafe.Groups.Group
 
   def mount(_params, session, socket) do
-    if connected?(socket), do: Phoenix.PubSub.subscribe(Cafe.PubSub, Groups.pubsub_topic())
+    if connected?(socket) do 
+      Phoenix.PubSub.subscribe(Cafe.PubSub, Groups.pubsub_topic())
+      Phoenix.PubSub.subscribe(Cafe.PubSub, GroupUsers.pubsub_topic())
+    end
 
     current_user = Accounts.get_user_by_session_token(session["user_token"])
-    time_at_mount = DateTime.utc_now()
     groups = Groups.list_groups(preloads: [:users]) |> Enum.reverse()
     group_changeset = Groups.change_group(%Group{})
 
     {:ok,
      assign(socket,
-       time_at_mount: time_at_mount,
-       current_user_email: current_user.email,
        current_user_id: current_user.id,
        groups: groups,
        group_changeset: group_changeset
@@ -26,8 +28,6 @@ defmodule CafeWeb.HomeLive do
     ~H"""
     <div>
       <h1 class="text-orange-500">Welcome home!</h1>
-      <p>The time at mount was <%= @time_at_mount %></p>
-      <p>The current user's email is: <span class="text-blue-500"><%= @current_user_email %></span></p>
       <.form let={f} for={@group_changeset} phx-change="validate_group" phx-submit="add_group" >
         <div>
           <%= label f, :focus %>
@@ -72,9 +72,31 @@ defmodule CafeWeb.HomeLive do
     {:noreply, socket}
   end
 
-  def handle_info({:create_group, {:ok, group}}, socket) do
+  def handle_event("user_leave_group", %{"userid" => user_id, "groupid" => group_id}, socket) do
+    Groups.remove_user(group_id, user_id)
+
+    {:noreply, socket}
+  end
+
+  def handle_info({:create_group, group}, socket) do
     group = Repo.preload(group, :users)
     socket = assign(socket, :groups, [group])
+
+    {:noreply, socket}
+  end
+
+  def handle_info({:create_group_user, group_user}, socket) do
+    %GroupUser{group_id: group_id} = group_user
+    updated_group = Groups.get_group!(group_id) |> Repo.preload(:users)
+    socket = update(socket, :groups, fn groups -> [updated_group | groups] end)
+
+    {:noreply, socket}
+  end
+
+  def handle_info({:remove_group_user, group_user}, socket) do
+    %GroupUser{group_id: group_id} = group_user
+    updated_group = Groups.get_group!(group_id) |> Repo.preload(:users)
+    socket = update(socket, :groups, fn groups -> [updated_group | groups] end)
 
     {:noreply, socket}
   end
@@ -106,7 +128,12 @@ defmodule CafeWeb.HomeLive do
           <p><%= user.email %></p>
         <% end %>
       </div>
-    <button class="text-md bg-amber-700" phx-click="user_join_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Join Group</button>
+
+    <%= if Groups.member?(@id, current_user_id) do %>
+    <button class="text-md text-amber-700 border-stone-500 border-2 rounded-md p-2 hover:bg-gray-200" phx-click="user_leave_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Leave Group</button>
+      <% else %>
+    <button class="text-md text-amber-700 border-stone-500 border-2 rounded-md p-2 hover:bg-gray-200" phx-click="user_join_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Join Group</button>
+      <% end %>
     </div>
     """
   end

@@ -1,4 +1,4 @@
-defmodule Cafe.Joins.GroupUser do
+defmodule Cafe.Joins.GroupUsers.GroupUser do
   use Ecto.Schema
 
   import Ecto.Changeset

@@ -3,7 +3,7 @@ defmodule Cafe.GroupsTest do
 
   alias Cafe.Groups
   alias Cafe.Groups.Group
-  alias Cafe.Joins.GroupUser
+  alias Cafe.Joins.GroupUsers.GroupUser
 
   import Cafe.{GroupsFixtures, AccountsFixtures}
 

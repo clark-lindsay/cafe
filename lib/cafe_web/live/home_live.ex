@@ -24,19 +24,28 @@ defmodule CafeWeb.HomeLive do
      ), temporary_assigns: [groups: []]}
   end
 
+  def handle_params(params, _url, socket) do
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
   def render(assigns) do
     ~H"""
+    <%= if @live_action in [:new, :edit] do %>
+      <.modal return_to={Routes.home_path(@socket, :index)}>
+        <.live_component
+          module={CafeWeb.GroupLive.FormComponent}
+          id={@group.id || :new}
+          title={@page_title}
+          action={@live_action}
+          group={@group}
+          return_to={Routes.home_path(@socket, :index)}
+        />
+      </.modal>
+    <% end %>
+
     <div>
       <h1 class="text-orange-500">Welcome home!</h1>
-      <.form let={f} for={@group_changeset} phx-change="validate_group" phx-submit="add_group" >
-        <div>
-          <%= label f, :focus %>
-          <%= text_input f, :focus, phx_debounce: 250 %>
-          <%= error_tag f, :focus %>
-        </div>
-
-        <%= submit "Add Group", class: "text-lg border-2 m-2 p-2" %>
-      </.form>
+          <button class="bg-amber-700 p-2 m-2 text-white"><%= live_patch "Add Group", to: Routes.home_path(@socket, :new) %></button>
       <div id="groups" phx-update="prepend" class="grid grid-cols-2 gap-4 m-4">
         <%= for group <- @groups do %>
           <.group term={group} id={group.id} current_user_id={@current_user_id} />
@@ -44,6 +53,18 @@ defmodule CafeWeb.HomeLive do
       </div>
     </div>
     """
+  end
+
+  defp apply_action(socket, :new, _params) do
+    socket
+    |> assign(:page_title, "New Group")
+    |> assign(:group, %Group{})
+  end
+
+  defp apply_action(socket, :index, _params) do
+    socket
+    |> assign(:page_title, "Cafe - Home")
+    |> assign(:group, nil)
   end
 
   def handle_event("add_group", %{"group" => params}, socket) do

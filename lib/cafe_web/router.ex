@@ -26,7 +26,9 @@ defmodule CafeWeb.Router do
   scope "/", CafeWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live "/home", HomeLive
+    live "/home", HomeLive, :index
+    live "/home/new", HomeLive, :new
+    live "/home/:id/edit", HomeLive, :edit
   end
 
   # Other scopes may use custom stacks.

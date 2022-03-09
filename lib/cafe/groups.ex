@@ -122,8 +122,6 @@ defmodule Cafe.Groups do
     Group.changeset(group, attrs)
   end
 
-  def pubsub_topic(), do: @topic
-
   @doc """
   Associates a `Cafe.AccountsUser` to the `Group` using the
   `Cafe.Joins.GroupUsers.GroupUser` schema
@@ -131,11 +129,9 @@ defmodule Cafe.Groups do
   ## Examples
 
       iex> add_user(group, user)
-      %Cafe.Joins.GroupUsers.GroupUser{}
+      {:ok, %Cafe.Joins.GroupUsers.GroupUser{}}
   """
-  def add_user(%Group{id: group_id}, %User{id: user_id}) do
-    add_user(group_id, user_id)
-  end
+  def add_user(%Group{id: group_id}, %User{id: user_id}), do: add_user(group_id, user_id)
 
   def add_user(group_id, user_id) do
     GroupUsers.create_group_user(group_id, user_id)
@@ -155,4 +151,6 @@ defmodule Cafe.Groups do
       :count
     ) > 0
   end
+
+  def pubsub_topic(), do: @topic
 end

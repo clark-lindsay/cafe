@@ -45,7 +45,7 @@ defmodule CafeWeb.HomeLive do
 
     <div>
       <h1 class="text-orange-500">Welcome home!</h1>
-          <button class="bg-amber-700 p-2 m-2 text-white"><%= live_patch "Add Group", to: Routes.home_path(@socket, :new) %></button>
+      <div class="m-2"><%= live_patch "Add Group", to: Routes.home_path(@socket, :new), class: "bg-amber-700 p-2 m-2 text-white" %></div>
       <div id="groups" phx-update="prepend" class="grid grid-cols-2 gap-4 m-4">
         <%= for group <- @groups do %>
           <.group term={group} id={group.id} current_user_id={@current_user_id} />
@@ -144,14 +144,16 @@ defmodule CafeWeb.HomeLive do
       <div>Work Item: <a href={work_item_link} class="text-blue-500"><%= work_item_link %></a></div> 
 
       <div>
-        <h3>Users</h3>
-        <%= for user <- users do %>
-          <p><%= user.email %></p>
-        <% end %>
+        <h3 class="text-md text-amber-700">Users</h3>
+        <ul class="flex my-1">
+          <%= for user <- users do %>
+            <li class="text-black text-md"><%= user.email %></li>
+          <% end %>
+        </ul>
       </div>
 
     <%= if Groups.member?(@id, current_user_id) do %>
-    <button class="text-md text-amber-700 border-stone-500 border-2 rounded-md p-2 hover:bg-gray-200" phx-click="user_leave_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Leave Group</button>
+    <button class="text-md text-red-400 border-stone-500 border-2 rounded-md p-2 hover:bg-gray-200" phx-click="user_leave_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Leave Group</button>
       <% else %>
     <button class="text-md text-amber-700 border-stone-500 border-2 rounded-md p-2 hover:bg-gray-200" phx-click="user_join_group" phx-value-userid={current_user_id} phx-value-groupid={@id}>Join Group</button>
       <% end %>

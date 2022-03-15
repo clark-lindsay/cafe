@@ -5,7 +5,7 @@ defmodule Cafe.Teams.Team do
 
   alias Cafe.Accounts.User
   alias Cafe.Groups.Group
-  alias Cafe.Joins.{GroupTeam, TeamUsers.TeamUser}
+  alias Cafe.Joins.{GroupTeams.GroupTeam, TeamUsers.TeamUser}
 
   schema "teams" do
     field :description, :string

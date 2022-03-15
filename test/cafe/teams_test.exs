@@ -3,7 +3,7 @@ defmodule Cafe.TeamsTest do
 
   alias Cafe.Teams
   alias Cafe.Teams.Team
-  alias Cafe.Joins.{GroupTeam, TeamUsers.TeamUser}
+  alias Cafe.Joins.{GroupTeams.GroupTeam, TeamUsers.TeamUser}
 
   import Cafe.{AccountsFixtures, GroupsFixtures, TeamsFixtures}
 

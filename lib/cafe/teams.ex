@@ -9,7 +9,7 @@ defmodule Cafe.Teams do
   alias Cafe.Accounts.User
   alias Cafe.Groups.Group
   alias Cafe.Teams.Team
-  alias Cafe.Joins.GroupTeam
+  alias Cafe.Joins.GroupTeams.GroupTeam
 
   @doc """
   Returns the list of teams.

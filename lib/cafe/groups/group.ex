@@ -5,8 +5,7 @@ defmodule Cafe.Groups.Group do
 
   alias Cafe.Accounts.User
   alias Cafe.Teams.Team
-  alias Cafe.Joins.{GroupTeam}
-  alias Cafe.Joins.GroupUsers.GroupUser
+  alias Cafe.Joins.{GroupTeams.GroupTeam, GroupUsers.GroupUser}
 
   @required_attrs ~w[focus collab_link work_item_link]a
 

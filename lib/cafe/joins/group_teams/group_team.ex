@@ -1,4 +1,4 @@
-defmodule Cafe.Joins.GroupTeam do
+defmodule Cafe.Joins.GroupTeams.GroupTeam do
   use Ecto.Schema
 
   import Ecto.Changeset

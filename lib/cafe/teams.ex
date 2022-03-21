@@ -9,7 +9,7 @@ defmodule Cafe.Teams do
   alias Cafe.Accounts.User
   alias Cafe.Groups.Group
   alias Cafe.Teams.Team
-  alias Cafe.Joins.GroupTeams
+  alias Cafe.Joins.{GroupTeams, TeamUsers.TeamUser}
 
   @doc """
   Returns the list of teams.
@@ -22,6 +22,18 @@ defmodule Cafe.Teams do
   """
   def list_teams do
     Repo.all(Team)
+  end
+
+  def list_teams_for_user(%User{} = user), do: list_teams_for_user(user.id)
+  def list_teams_for_user(user_id) do
+    Repo.all(
+      from(t in Team,
+        join: tu in TeamUser,
+        on: t.id == tu.team_id,
+        where: tu.user_id == ^user_id,
+        select: t
+      )
+    )
   end
 
   @doc """

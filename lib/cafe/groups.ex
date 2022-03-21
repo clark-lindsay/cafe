@@ -9,8 +9,9 @@ defmodule Cafe.Groups do
   alias Cafe.Repo
 
   alias Cafe.Groups.Group
+  alias Cafe.Teams.Team
   alias Cafe.Accounts.User
-  alias Cafe.Joins.GroupUsers
+  alias Cafe.Joins.{GroupUsers, GroupTeams.GroupTeam}
   alias Cafe.Joins.GroupUsers.GroupUser
 
   @doc """
@@ -26,6 +27,18 @@ defmodule Cafe.Groups do
     preloads = args[:preloads] || []
 
     Repo.all(from g in Group, preload: ^preloads, select: g)
+  end
+
+  def list_groups_for_team(%Team{} = team), do: list_groups_for_team(team.id)
+  def list_groups_for_team(nil), do: []
+  def list_groups_for_team(team_id) do
+    Repo.all(
+      from g in Group,
+        join: gt in GroupTeam,
+        on: g.id == gt.group_id,
+        where: gt.team_id == ^team_id,
+        select: g
+    )
   end
 
   @doc """

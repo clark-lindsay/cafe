@@ -1,26 +1,35 @@
 defmodule CafeWeb.HomeLive do
   use CafeWeb, :live_view
 
-  alias Cafe.{Accounts, Groups, Repo}
+  alias Cafe.{Accounts, Groups, Teams, Repo}
   alias Cafe.Joins.GroupUsers
   alias Cafe.Joins.GroupUsers.GroupUser
   alias Cafe.Groups.Group
+  alias Cafe.Teams.Team
 
   def mount(_params, session, socket) do
-    if connected?(socket) do 
+    if connected?(socket) do
       Phoenix.PubSub.subscribe(Cafe.PubSub, Groups.pubsub_topic())
       Phoenix.PubSub.subscribe(Cafe.PubSub, GroupUsers.pubsub_topic())
     end
 
     current_user = Accounts.get_user_by_session_token(session["user_token"])
-    groups = Groups.list_groups(preloads: [:users]) |> Enum.reverse()
+
+    teams = Teams.list_teams_for_user(current_user)
+    team_changeset = Teams.change_team(%Team{})
+    selected_team_id = if Enum.empty?(teams), do: nil, else: hd(teams).id
+
+    groups = Groups.list_groups_for_team(selected_team_id) |> Repo.preload(:users) |> Enum.reverse()
     group_changeset = Groups.change_group(%Group{})
 
     {:ok,
      assign(socket,
        current_user_id: current_user.id,
        groups: groups,
-       group_changeset: group_changeset
+       group_changeset: group_changeset,
+       team_changeset: team_changeset,
+       teams: teams,
+       selected_team_id: selected_team_id
      ), temporary_assigns: [groups: []]}
   end
 
@@ -45,8 +54,19 @@ defmodule CafeWeb.HomeLive do
 
     <div>
       <h1 class="text-orange-500">Welcome home!</h1>
+    <div class="grid grid-cols-2">
+      <h2 class="text-black text-xl">Viewing Groups for:</h2>
+      <.form
+      let={f}
+      for={@team_changeset}
+      id="team-select-form"
+      phx-change="team-select-change">
+      <%= select f, :team_id, team_select_options(@teams), selected: @selected_team_id  %>
+      </.form>
+    </div> 
+
       <div class="m-2"><%= live_patch "Add Group", to: Routes.home_path(@socket, :new), class: "bg-amber-700 p-2 m-2 text-white" %></div>
-      <div id="groups" phx-update="prepend" class="grid grid-cols-2 gap-4 m-4">
+      <div id={"groups-for-team-#{@selected_team_id}"} phx-update="prepend" class="grid grid-cols-2 gap-4 m-4">
         <%= for group <- @groups do %>
           <.group term={group} id={group.id} current_user_id={@current_user_id} />
         <% end %>
@@ -65,6 +85,19 @@ defmodule CafeWeb.HomeLive do
     socket
     |> assign(:page_title, "Cafe - Home")
     |> assign(:group, nil)
+  end
+
+  def handle_event("team-select-change", %{"team" => params}, socket) do
+    groups =
+      if params["team_id"] == "all",
+        do: Groups.list_groups(preloads: [:users]) |> Enum.reverse(),
+        else: Groups.list_groups_for_team(params["team_id"]) |> Repo.preload(:users)
+
+    {:noreply,
+     assign(socket,
+       selected_team_id: params["team_id"],
+       groups: groups
+     )}
   end
 
   def handle_event("add_group", %{"group" => params}, socket) do
@@ -159,5 +192,9 @@ defmodule CafeWeb.HomeLive do
       <% end %>
     </div>
     """
+  end
+
+  defp team_select_options(teams) do
+    [{"All", :all} | Enum.map(teams, &{&1.name, &1.id})]
   end
 end

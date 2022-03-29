@@ -100,24 +100,6 @@ defmodule CafeWeb.HomeLive do
      )}
   end
 
-  def handle_event("add_group", %{"group" => params}, socket) do
-    params =
-      Map.put(params, "collab_link", "example.com")
-      |> Map.put("work_item_link", "example.com")
-
-    {:ok, _group} = Groups.create_group(params)
-    socket = assign(socket, group_changeset: Groups.change_group(%Group{}))
-
-    {:noreply, socket}
-  end
-
-  def handle_event("validate_group", %{"group" => params}, socket) do
-    changeset = %Group{} |> Groups.change_group(params) |> Map.put(:action, :insert)
-
-    socket = assign(socket, group_changeset: changeset)
-    {:noreply, socket}
-  end
-
   def handle_event("user_join_group", %{"userid" => user_id, "groupid" => group_id}, socket) do
     Groups.add_user(group_id, user_id)
     group = Groups.get_group!(group_id) |> Repo.preload(:users)
@@ -157,7 +139,7 @@ defmodule CafeWeb.HomeLive do
 
   def handle_info(any, socket) do
     IO.puts(
-      "Module #{IO.inspect(__MODULE__)} received a message of: #{IO.inspect(any)} without a clause to handle it. Ignoring."
+      "Module #{__MODULE__} received a message of: #{any} without a clause to handle it. Ignoring."
     )
 
     {:noreply, socket}
